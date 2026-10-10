@@ -1,0 +1,41 @@
+{
+  "main_module": "worker.js",
+  "compatibility_date": "2024-11-01",
+  "bindings": [
+    {
+      "type": "d1",
+      "name": "D1",
+      "id": "<你的 D1 数据库 UUID>"
+    },
+    {
+      "type": "plain_text",
+      "name": "BOT_TOKEN_ENV",
+      "text": "<BotFather 拿到的 Bot Token>"
+    },
+    {
+      "type": "plain_text",
+      "name": "GROUP_ID_ENV",
+      "text": "<后台群组 ID，形如 -100xxxxxxxxxx>"
+    },
+    {
+      "type": "plain_text",
+      "name": "MAX_MESSAGES_PER_MINUTE_ENV",
+      "text": "30"
+    },
+    {
+      "type": "plain_text",
+      "name": "TURNSTILE_SITEKEY_ENV",
+      "text": "<Cloudflare Turnstile Sitekey，留空则回退算术验证>"
+    },
+    {
+      "type": "plain_text",
+      "name": "TURNSTILE_SECRET_ENV",
+      "text": "<Cloudflare Turnstile Secret>"
+    },
+    {
+      "type": "plain_text",
+      "name": "WEBHOOK_SECRET_ENV",
+      "text": "<64 位随机十六进制串，用 openssl rand -hex 32 生成>"
+    }
+  ]
+}

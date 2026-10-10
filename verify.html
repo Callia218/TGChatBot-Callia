@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>人机验证</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #111111);
+    padding: 24px;
+  }
+  .card { width: 100%; max-width: 360px; text-align: center; }
+  .logo { font-size: 40px; line-height: 1; margin-bottom: 14px; }
+  .title { font-size: 20px; font-weight: 600; margin: 0 0 8px; }
+  .sub { font-size: 14px; opacity: .6; margin: 0 0 26px; line-height: 1.6; }
+  .box { display: flex; justify-content: center; min-height: 78px; }
+  .status { margin-top: 20px; font-size: 14px; min-height: 22px; line-height: 1.5; }
+  .ok { color: #16a34a; font-weight: 600; }
+  .err { color: #dc2626; }
+  .hint { margin-top: 16px; font-size: 12px; opacity: .45; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🛡️</div>
+  <h1 class="title">人机验证</h1>
+  <p class="sub">完成下方验证即可开始与常青藤对话</p>
+  <div class="box">
+    <div class="cf-turnstile" data-sitekey="__SITEKEY__" data-callback="onTurnstileOk" data-theme="auto"></div>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="hint">验证由 Cloudflare Turnstile 提供</div>
+</div>
+<script>
+(function () {
+  var statusEl = document.getElementById('status');
+  var done = false;
+
+  function setStatus(text, cls) {
+    statusEl.textContent = text;
+    statusEl.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  function tg() {
+    return (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+  }
+
+  window.onTurnstileOk = function (token) {
+    if (done) return;
+    done = true;
+    setStatus('验证中…');
+
+    var app = tg();
+    var initData = (app && app.initData) ? app.initData : '';
+
+    fetch('/verify/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, initData: initData })
+    }).then(function (r) {
+      return r.json();
+    }).then(function (res) {
+      if (res && res.ok) {
+        setStatus('验证成功，窗口即将关闭', 'ok');
+        setTimeout(function () { if (app) { app.close(); } }, 1500);
+      } else {
+        done = false;
+        setStatus((res && res.message) || '验证失败，请重试', 'err');
+        if (window.turnstile) { window.turnstile.reset(); }
+      }
+    }).catch(function () {
+      done = false;
+      setStatus('网络异常，请重试', 'err');
+      if (window.turnstile) { window.turnstile.reset(); }
+    });
+  };
+
+  try {
+    var app = tg();
+    if (app) { app.ready(); app.expand(); }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# ---- 机密文件（绝对不要提交） ----
+metadata.json
+turnstile.json
+webhook_secret.txt
+.env
+.env.*
+!.env.example
+
+# ---- 部署脚本产物 ----
+build/
+dist/
+*.log
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- 依赖 ----
+node_modules/
+__pycache__/
+*.pyc
