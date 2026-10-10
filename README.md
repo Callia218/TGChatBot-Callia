@@ -1,7 +1,7 @@
-# 常青藤 · 双向客服机器人
+# TG双向客服机器人
 
 > Telegram 双向匿名客服机器人 —— 陌生人私聊机器人，消息自动落入后台群组的独立**话题（Topic）**，你在群里回复即可原路发回给对方。
-> 基于 [52Lxcloud/TGChatBot](https://github.com/52Lxcloud/TGChatBot) 深度改造，由 **Callia** 二次开发。
+> 基于 凉心的[52Lxcloud/TGChatBot](https://github.com/52Lxcloud/TGChatBot) 改造，由 **Callia** 二次开发。
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](./LICENSE)
 [![Platform: Cloudflare Workers](https://img.shields.io/badge/Platform-Cloudflare%20Workers-F38020.svg)](https://workers.cloudflare.com/)
@@ -12,7 +12,7 @@
 
 第三方双向客服机器人最大的痛点是**入口无验证**：任何爬虫号、营销号都能直接私聊机器人，把广告灌进你的后台群。
 
-常青藤在消息转发前加了一道**人机验证闸门**：
+在消息转发前加了一道**人机验证闸门**：
 
 ```
 陌生人 → 私聊 Bot → 未验证？→ 弹出「点击验证」按钮
@@ -204,4 +204,4 @@ const IDLE_CLEANUP_INTERVAL = 5 * 60 * 1000;         // 清理检查间隔
 
 [GPL-3.0](./LICENSE)
 
-上游 [52Lxcloud/TGChatBot](https://github.com/52Lxcloud/TGChatBot) 采用 GPL-3.0，因此本衍生作品同样以 GPL-3.0 发布。你可以自由使用、修改、分发，但**衍生作品必须同样开源**。
+上游 [52Lxcloud/TGChatBot](https://github.com/52Lxcloud/TGChatBot)。你可以自由使用、修改、分发，但**衍生作品必须同样开源**。
