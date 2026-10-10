@@ -13,8 +13,10 @@
 #   ./deploy.sh
 #
 # 可选环境变量：
-#   SCRIPT_NAME      Worker 名称，默认 changqingteng
-#   DB_NAME          D1 数据库名，默认 changqingteng-db
+#   SCRIPT_NAME      Worker 名称，默认 tgchatbot
+#   DB_NAME          D1 数据库名，默认 tgchatbot-db
+#                    （这两个默认值刻意与线上既有部署保持一致，
+#                      重复执行 deploy.sh 会「更新」而不是「新建」）
 #   RATE_LIMIT       每用户每分钟消息上限，默认 30
 #   TURNSTILE_SITEKEY / TURNSTILE_SECRET
 #                    Cloudflare Turnstile 凭据；不填则自动回退「算术验证」
@@ -28,8 +30,8 @@ ACCOUNT_ID="${ACCOUNT_ID:-}"
 BOT_TOKEN="${BOT_TOKEN:-}"
 GROUP_ID="${GROUP_ID:-}"
 RATE_LIMIT="${RATE_LIMIT:-30}"
-SCRIPT_NAME="${SCRIPT_NAME:-changqingteng}"
-DB_NAME="${DB_NAME:-changqingteng-db}"
+SCRIPT_NAME="${SCRIPT_NAME:-tgchatbot}"
+DB_NAME="${DB_NAME:-tgchatbot-db}"
 TURNSTILE_SITEKEY="${TURNSTILE_SITEKEY:-}"
 TURNSTILE_SECRET="${TURNSTILE_SECRET:-}"
 WEBHOOK_SECRET="${WEBHOOK_SECRET:-}"

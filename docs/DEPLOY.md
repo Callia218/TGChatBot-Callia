@@ -63,8 +63,8 @@
 
 1. Cloudflare Dashboard → **Turnstile** → **Add Site**
 2. 填写：
-   - **Site name**：随便，如 `changqingteng-verify`
-   - **Domain**：填 `<你的Worker名>.<你的子域>.workers.dev`（例如 `changqingteng.abcdefg.workers.dev`）
+   - **Site name**：随便，如 `tgchatbot-verify`
+   - **Domain**：填 `<你的Worker名>.<你的子域>.workers.dev`（例如 `tgchatbot.abcdefg.workers.dev`）
    - **Widget Mode**：`Managed`
 3. 创建后得到 **Site Key**（`0x4AAA...`）和 **Secret Key**（`0x4AAA...`）
 
@@ -76,8 +76,8 @@
 ## 三、一键部署
 
 ```bash
-git clone https://github.com/Callia218/changqingteng-relay-bot.git
-cd changqingteng-relay-bot
+git clone https://github.com/Callia218/TGChatBot-Callia.git
+cd TGChatBot-Callia
 
 chmod +x deploy.sh
 
@@ -121,7 +121,7 @@ ACCOUNT_ID=xxx
 DB_ID=$(curl -sS -X POST -H "Authorization: Bearer $CF_TOKEN" \
   -H "Content-Type: application/json" \
   "$API/accounts/$ACCOUNT_ID/d1/database" \
-  -d '{"name":"changqingteng-db"}' | jq -r '.result.uuid')
+  -d '{"name":"tgchatbot-db"}' | jq -r '.result.uuid')
 
 # 2. 生成 webhook secret
 WS=$(openssl rand -hex 32)
@@ -149,16 +149,16 @@ jq -n --arg db "$DB_ID" --arg bt "1234567890:AAHxxxxxxxxxxxxxxxxxxxxx" --arg gid
 curl -sS -X PUT -H "Authorization: Bearer $CF_TOKEN" \
   -F "metadata=@metadata.json;type=application/json" \
   -F "worker.js=@worker.js;type=application/javascript+module" \
-  "$API/accounts/$ACCOUNT_ID/workers/scripts/changqingteng"
+  "$API/accounts/$ACCOUNT_ID/workers/scripts/tgchatbot"
 
 # 6. 启用子域
 curl -sS -X POST -H "Authorization: Bearer $CF_TOKEN" \
   -H "Content-Type: application/json" \
-  "$API/accounts/$ACCOUNT_ID/workers/scripts/changqingteng/subdomain" \
+  "$API/accounts/$ACCOUNT_ID/workers/scripts/tgchatbot/subdomain" \
   -d '{"enabled":true,"previews_enabled":true}'
 
 # 7. 触发初始化
-curl -sS "https://changqingteng.<子域>.workers.dev/"
+curl -sS "https://tgchatbot.<子域>.workers.dev/"
 ```
 
 > ⚠️ 注意：`verify.html` 只是验证页的**源码参考**。线上实际返回的验证页来自
@@ -182,7 +182,7 @@ curl -sS "https://api.telegram.org/bot<TOKEN>/getWebhookInfo" | jq
 {
   "ok": true,
   "result": {
-    "url": "https://changqingteng.xxx.workers.dev/webhook",
+    "url": "https://tgchatbot.xxx.workers.dev/webhook",
     "pending_update_count": 0
   }
 }
@@ -191,7 +191,7 @@ curl -sS "https://api.telegram.org/bot<TOKEN>/getWebhookInfo" | jq
 ### 2. 检查数据表
 
 ```bash
-curl -sS "https://changqingteng.xxx.workers.dev/checkTables"
+curl -sS "https://tgchatbot.xxx.workers.dev/checkTables"
 # → Database tables checked and repaired
 ```
 
@@ -209,7 +209,7 @@ SELECT name FROM sqlite_master WHERE type='table';
 curl -sS -o /dev/null -w "%{http_code}\n" \
   -X POST -H "Content-Type: application/json" \
   -d '{"update_id":1}' \
-  "https://changqingteng.xxx.workers.dev/webhook"
+  "https://tgchatbot.xxx.workers.dev/webhook"
 ```
 
 ### 4. 端到端测试
