@@ -8,6 +8,7 @@ const IDLE_CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 分钟
 const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 小时
 const TOPIC_IDLE_DAYS = 3; // 话题空闲多少天后自动删除
 const VERIFICATION_VALID_SECONDS = 3 * 24 * 60 * 60; // 验证有效期(秒)
+const UNVERIFIED_RETENTION_DAYS = 7; // 未验证用户记录保留多少天后自动清除
 
 let TURNSTILE_SITEKEY = null;
 let TURNSTILE_SECRET = null;
@@ -167,14 +168,15 @@ const __worker = {
       isInitialized = true;
     }
 
-    // 空闲话题惰性清理：每个 isolate 最多 5 分钟执行一次
+    // 惰性清理：每个 isolate 最多 5 分钟执行一次
     try {
       if (Date.now() - lastIdleCleanupTime > IDLE_CLEANUP_INTERVAL) {
         lastIdleCleanupTime = Date.now();
         await cleanupIdleTopics(env.D1);
+        await cleanupStaleUnverified(env.D1);
       }
     } catch (e) {
-      console.error(`清理空闲话题失败: ${e.message}`);
+      console.error(`惰性清理失败: ${e.message}`);
     }
 
     async function handleRequest(request) {
@@ -311,7 +313,8 @@ const __worker = {
             last_verification_message_id: 'TEXT',
             is_first_verification: 'BOOLEAN DEFAULT TRUE',
             is_rate_limited: 'BOOLEAN DEFAULT FALSE',
-            is_verifying: 'BOOLEAN DEFAULT FALSE'
+            is_verifying: 'BOOLEAN DEFAULT FALSE',
+            created_at: 'INTEGER DEFAULT 0'
           }
         },
         message_rates: {
@@ -454,6 +457,32 @@ const __worker = {
       console.log(`已自动清理 ${idleTopics.results.length} 个空闲话题`);
     }
 
+    // 惰性清理：删除「来过但从没通过验证」的僵尸记录
+    // 这类用户不会进 cleanupIdleTopics（没有话题映射），不清理会永久堆积。
+    async function cleanupStaleUnverified(d1) {
+      const now = Date.now();
+      const cutoff = now - UNVERIFIED_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+      // 老数据没有 created_at，先补上当前时间，避免被立刻误删
+      await d1.prepare('UPDATE user_states SET created_at = ? WHERE created_at IS NULL OR created_at = 0')
+        .bind(now).run();
+
+      const res = await d1.prepare(
+        `DELETE FROM user_states
+          WHERE is_verified = 0
+            AND created_at < ?
+            AND chat_id NOT IN (SELECT chat_id FROM chat_topic_mappings)`
+      ).bind(cutoff).run();
+
+      const removed = (res.meta && res.meta.changes) || 0;
+      if (removed > 0) {
+        console.log(`已自动清理 ${removed} 条未验证僵尸记录`);
+      }
+
+      // 顺带清掉失去归属的限流记录
+      await d1.prepare('DELETE FROM message_rates WHERE chat_id NOT IN (SELECT chat_id FROM user_states)').run();
+    }
+
     async function handleUpdate(update) {
       if (update.message) {
         const messageId = update.message.message_id.toString();
@@ -509,8 +538,8 @@ const __worker = {
         .first();
       if (!userState) {
         userState = { is_blocked: 0, is_first_verification: 1, is_verified: 0, verified_expiry: null, is_verifying: 0, verification_code: null, code_expiry: null, last_verification_message_id: null };
-        await env.D1.prepare('INSERT INTO user_states (chat_id, is_blocked, is_first_verification, is_verified, is_verifying) VALUES (?, ?, ?, ?, ?)')
-          .bind(chatId, 0, 1, 0, 0)
+        await env.D1.prepare('INSERT INTO user_states (chat_id, is_blocked, is_first_verification, is_verified, is_verifying, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+          .bind(chatId, 0, 1, 0, 0, Date.now())
           .run();
       }
 

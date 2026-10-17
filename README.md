@@ -40,6 +40,7 @@
 | **Webhook 来源校验** | `secret_token` + `X-Telegram-Bot-Api-Secret-Token` 头比对，杜绝伪造更新 |
 | **一人一话题** | 每个用户独占一个 Forum Topic，互不串台 |
 | **话题空闲自动清理** | 默认 3 天无活动自动删话题 + 清状态，避免话题堆积 |
+| **僵尸记录自动清理** | 只发过 `/start`、从没通过验证的号，7 天后自动从数据库清除（这类号不会建话题，否则会永久堆积） |
 | **验证有效期管理** | 默认 3 天，活跃用户自动续期，不打扰正常用户 |
 | **频率限制** | 默认 30 条/分钟，超频**静默丢弃**（不重发验证） |
 | **管理员鉴权** | 只有后台群管理员在话题里的发言才会转发，防止群成员冒充客服 |
@@ -137,6 +138,7 @@ TURNSTILE_SECRET=0x4AAAAAAA... \
 ```js
 const TOPIC_IDLE_DAYS = 3;                          // 话题空闲多少天后自动删除
 const VERIFICATION_VALID_SECONDS = 3 * 24 * 60 * 60; // 验证有效期（秒）
+const UNVERIFIED_RETENTION_DAYS = 7;                 // 未验证僵尸记录保留天数
 const IDLE_CLEANUP_INTERVAL = 5 * 60 * 1000;         // 清理检查间隔
 ```
 
@@ -195,10 +197,12 @@ const IDLE_CLEANUP_INTERVAL = 5 * 60 * 1000;         // 清理检查间隔
 5. 修复：话题通知 Markdown 解析失败导致**话题成孤儿、话题内无消息**
 6. 修复：消息速率缓存键冲突
 7. 新增：**话题空闲自动清理** + 删除用户时同步删话题
-8. 新增：**后台群管理员鉴权**，堵住群成员冒充客服的漏洞
-9. 改进：Markdown 解析失败自动降级为纯文本
-10. 改进：欢迎/通知文案**本地内嵌**，去除对 GitHub raw 的运行时依赖
-11. 新增：一键部署脚本 `deploy.sh`（纯 REST API，不依赖 wrangler）
+8. 新增：**未验证僵尸记录自动清理**（`user_states.created_at` + 7 天 TTL），顺带清理失去归属的限流记录
+9. 新增：**后台群管理员鉴权**，堵住群成员冒充客服的漏洞
+10. 新增：**管理端点鉴权**（`/registerWebhook`、`/unRegisterWebhook`、`/checkTables` 需带 token）
+11. 改进：Markdown 解析失败自动降级为纯文本
+12. 改进：欢迎/通知文案**本地内嵌**，去除对 GitHub raw 的运行时依赖
+13. 新增：一键部署脚本 `deploy.sh`（纯 REST API，不依赖 wrangler）
 
 ---
 
