@@ -1,7 +1,7 @@
-# TG双向客服机器人
+# 常青藤 · 双向客服机器人
 
 > Telegram 双向匿名客服机器人 —— 陌生人私聊机器人，消息自动落入后台群组的独立**话题（Topic）**，你在群里回复即可原路发回给对方。
-> 基于 凉心的[52Lxcloud/TGChatBot](https://github.com/52Lxcloud/TGChatBot) 改造，由 **Callia** 二次开发。
+> 基于 [52Lxcloud/TGChatBot](https://github.com/52Lxcloud/TGChatBot) 深度改造，由 **Callia** 二次开发。
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](./LICENSE)
 [![Platform: Cloudflare Workers](https://img.shields.io/badge/Platform-Cloudflare%20Workers-F38020.svg)](https://workers.cloudflare.com/)
@@ -12,7 +12,7 @@
 
 第三方双向客服机器人最大的痛点是**入口无验证**：任何爬虫号、营销号都能直接私聊机器人，把广告灌进你的后台群。
 
-在消息转发前加了一道**人机验证闸门**：
+常青藤在消息转发前加了一道**人机验证闸门**：
 
 ```
 陌生人 → 私聊 Bot → 未验证？→ 弹出「点击验证」按钮
@@ -177,6 +177,8 @@ const IDLE_CLEANUP_INTERVAL = 5 * 60 * 1000;         // 清理检查间隔
 
 - **`/verify/check` 强制校验 `initData` HMAC 签名**，密钥为 `WebAppData`、消息为 Bot Token，并检查 `auth_date` 不超过 24 小时 —— 伪造 `user_id` 会被拒绝。
 - **`/webhook` 校验 `X-Telegram-Bot-Api-Secret-Token`**。配置了 `WEBHOOK_SECRET_ENV` 后，未携带正确头部的请求直接 403。
+- **管理端点鉴权**：`/registerWebhook`、`/unRegisterWebhook`、`/checkTables` 在配置了 `WEBHOOK_SECRET_ENV` 后，必须带 `?token=<密钥>` 或请求头 `X-Admin-Token`，否则 403。
+  > ⚠️ 这三个端点早期是无鉴权的。`/unRegisterWebhook` 只要被任何人访问一次，就会把 Telegram webhook 清空、机器人立刻失联 —— 这是**必须配 `WEBHOOK_SECRET_ENV`** 的另一个理由。
 - **后台群管理员鉴权**：只有 `administrator` / `creator` 在话题里的发言才会转发给用户。
 - **不要把 `metadata.json` / `turnstile.json` / `.env` 提交到仓库** —— 里面是 Bot Token 和 Turnstile Secret，泄露等于 bot 被接管。`.gitignore` 已默认忽略。
 
@@ -204,4 +206,4 @@ const IDLE_CLEANUP_INTERVAL = 5 * 60 * 1000;         // 清理检查间隔
 
 [GPL-3.0](./LICENSE)
 
-上游 [52Lxcloud/TGChatBot](https://github.com/52Lxcloud/TGChatBot)。你可以自由使用、修改、分发，但**衍生作品必须同样开源**。
+上游 [52Lxcloud/TGChatBot](https://github.com/52Lxcloud/TGChatBot) 采用 GPL-3.0，因此本衍生作品同样以 GPL-3.0 发布。你可以自由使用、修改、分发，但**衍生作品必须同样开源**。

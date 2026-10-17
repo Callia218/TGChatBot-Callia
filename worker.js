@@ -209,14 +209,37 @@ const __worker = {
       } else if (url.pathname === '/verify/check') {
         return await handleVerifyCheck(request);
       } else if (url.pathname === '/registerWebhook') {
+        if (!isAdminRequest(request, url)) return new Response('Forbidden', { status: 403 });
         return await registerWebhook(request);
       } else if (url.pathname === '/unRegisterWebhook') {
+        if (!isAdminRequest(request, url)) return new Response('Forbidden', { status: 403 });
         return await unRegisterWebhook();
       } else if (url.pathname === '/checkTables') {
+        if (!isAdminRequest(request, url)) return new Response('Forbidden', { status: 403 });
         await checkAndRepairTables(env.D1);
         return new Response('Database tables checked and repaired', { status: 200 });
       }
       return new Response('Not Found', { status: 404 });
+    }
+
+    // 管理端点鉴权：/registerWebhook、/unRegisterWebhook、/checkTables
+    // 这些端点会直接操作 Telegram webhook，绝不能对外开放 ——
+    // 否则任何人访问一次 /unRegisterWebhook 就能让机器人彻底失联。
+    // 鉴权方式：?token=<WEBHOOK_SECRET> 或请求头 X-Admin-Token
+    function isAdminRequest(request, url) {
+      if (!WEBHOOK_SECRET) return true; // 未配置密钥时不限制，保持向后兼容
+      const provided = url.searchParams.get('token') || request.headers.get('X-Admin-Token') || '';
+      return timingSafeEqual(provided, WEBHOOK_SECRET);
+    }
+
+    function timingSafeEqual(a, b) {
+      if (typeof a !== 'string' || typeof b !== 'string') return false;
+      if (a.length !== b.length) return false;
+      let diff = 0;
+      for (let i = 0; i < a.length; i++) {
+        diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+      }
+      return diff === 0;
     }
 
     async function initialize(d1, request) {
